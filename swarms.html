@@ -30,18 +30,7 @@
 		lineWidth: 0
 	});
 
-	var sprite2 = new Sprite.Points([
-		new Vector(-5, 0),
-		new Vector(5, 0),
-		new Vector(0, 15)
-	], {
-		fillColor: "lime",
-		lineWidth: 0
-	});
-
-
 	var swarmers = [];
-	var swarmers2 = [];
 
 	for (var i = 0; i < 100; i++) {
 		var swarmer = new Rigidbody(Vector.Random(0, 2400, 0, 1000))
@@ -50,25 +39,11 @@
 		swarmers.push(swarmer);
 	}
 
-	for (var i = 0; i < 100; i++) {
-		var swarmer = new Rigidbody(Vector.Random(0, 2400, 0, 1000))
-		// swarmer.maxSpeed = 50;
-		swarmer.friction = 0.97;
-		swarmers2.push(swarmer);
-	}
-
 	sprite = new Sprite.Ellipse(5, {
 		lineWidth: 0,
 		fillColor: "red"
 	});
 	
-	sprite2 = new Sprite();
-
-// 	sprite2 = new Sprite.Ellipse(5, {
-// 		lineWidth: 0,
-// 		fillColor: "black"
-// 	});
-
 	background.redraw(function() {
 		background.fill(bg);
 	});
@@ -110,42 +85,8 @@
 			sprite.rotation = angle;
 
 			layer.sprite(swarmer.posn, sprite);
+			
 		});
-
-		swarmers2.forEach(function(swarmer) {
-			if (isNaN(swarmer.velocity.x)) {
-				swarmer.velocity = Vector.Empty;
-			}
-
-			var p = Vector.Add(controls.mousePos, new Vector(300, 0));
-
-			var angle = Helpers.AngleBetween(swarmer.posn, p);
-			var step = Helpers.StepBetween(swarmer.posn, p);
-
-			swarmer.addForce(Vector.Multiply(step, -3));
-			swarmer.logic();
-
-			var repulses = [];
-			swarmers2.forEach(function(compare) {
-
-				var dist = Helpers.DistanceBetween(swarmer.posn, compare.posn);
-
-				if (dist < 2 && compare != swarmer) {
-					var repulse = Helpers.StepBetween(swarmer.posn, compare.posn);
-					repulse = Vector.Multiply(repulse, -5);
-					repulses.push(repulse);
-				}
-			});
-
-			repulses.forEach(function(repulse) {
-				swarmer.addForce(repulse);
-			});
-
-			sprite.rotation = angle;
-
-			layer.sprite(swarmer.posn, sprite2);
-		});
-
 	});
 
 
