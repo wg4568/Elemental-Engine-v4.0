@@ -1,0 +1,83 @@
+<title>Elemental Engine v4.0</title>
+
+<div id="canvas"></div>
+
+<script src="unbuilt/helpers.js"></script>
+<script src="unbuilt/sprites.js"></script>
+<script src="unbuilt/canvas.js"></script>
+<script src="unbuilt/layers.js"></script>
+<script src="unbuilt/physics.js"></script>
+<script src="unbuilt/controls.js"></script>
+
+<script>
+
+	var canvas = new Canvas("canvas", fullscreen=true);
+	var controls = new Controls(canvas.div);
+	var background = new Layer();
+	var layer = new Layer();
+
+	canvas.addLayer(background);
+	canvas.addLayer(layer);
+
+	var bg = Color.RandomPastel.formatHEX();
+
+	var sprite = new Sprite.Points([
+		new Vector(-5, 0),
+		new Vector(5, 0),
+		new Vector(0, 15)
+	], {
+		fillColor: Color.RandomDark.formatHEX(),
+		lineWidth: 0
+	});
+
+	var swarmers = [];
+
+	for (var i = 0; i < 500; i++) {
+		var swarmer = new Rigidbody(Vector.Random(0, 2400, 0, 1000))
+		// swarmer.maxSpeed = 50;
+		swarmer.friction = 0.95;
+		swarmers.push(swarmer);
+	}
+
+	background.redraw(function() {
+		background.fill(bg);
+	});
+
+	Timer.Start(function() {
+
+		layer.clear();
+
+		swarmers.forEach(function(swarmer) {
+			if (isNaN(swarmer.velocity.x)) {
+				swarmer.velocity = Vector.Empty;
+			}
+
+			var angle = Helpers.AngleBetween(swarmer.posn, controls.mousePos);
+			var step = Helpers.StepBetween(swarmer.posn, controls.mousePos);
+
+			swarmer.addForce(Vector.Multiply(step, -1));
+			swarmer.logic();
+
+			var repulses = [];
+			swarmers.forEach(function(compare) {
+				var dist = Helpers.DistanceBetween(swarmer.posn, compare.posn);
+				if (dist < 2 && compare != swarmer) {
+					var repulse = Helpers.StepBetween(swarmer.posn, compare.posn);
+					repulse = Vector.Multiply(repulse, -5);
+					repulses.push(repulse);
+				}
+			});
+
+			repulses.forEach(function(repulse) {
+				swarmer.addForce(repulse);
+			});
+
+			sprite.rotation = angle;
+
+			layer.sprite(swarmer.posn, sprite);
+		});
+
+	});
+
+
+</script>
