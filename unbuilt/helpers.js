@@ -12,6 +12,12 @@ class Vector {
 		return vector.hasOwnProperty("x") && vector.hasOwnProperty("y");
 	}
 
+	static Random(xmin, xmax, ymin, ymax) {
+		var x = Helpers.RandomInt(xmin, xmax);
+		var y = Helpers.RandomInt(ymin, ymax);
+		return new Vector(x, y);
+	}
+
 	static Add() {
 		var total = new Vector(0, 0);
 		for (var i = 0; i < arguments.length; i++ ) {
@@ -95,7 +101,7 @@ Color = class {
 		var col = new Color(r, g, b);
 		return col;
 	}
-	
+
 	static get RandomPastel() {
 		var r = Helpers.RandomInt(0, 255);
 		var g = Helpers.RandomInt(0, 255);
@@ -115,7 +121,7 @@ Color = class {
 		col.saturation = 255;
 		return col;
 	}
-	
+
 	static get RandomNeon() {
 		var r = Helpers.RandomInt(0, 255);
 		var g = Helpers.RandomInt(0, 255);
@@ -237,7 +243,7 @@ Helpers.ToDegrees = function(radians) {
 
 Helpers.AngleBetween = function(point1, point2) {
 	var rads = Math.atan2(point1.x-point2.x, point1.y-point2.y);
-	return -Helpers.ToDegrees(rads)+90;
+	return -Helpers.ToDegrees(rads)+180;
 }
 
 Helpers.DistanceBetween = function(point1, point2) {
@@ -289,4 +295,3 @@ Helpers.RandomString = function() {
 Helpers.Clone = function(obj) {
 	return JSON.parse(JSON.stringify(obj));
 }
-
