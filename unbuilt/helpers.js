@@ -258,6 +258,12 @@ Helpers.StepBetween = function(point1, point2) {
 	return new Vector(dx, dy);
 }
 
+Helpers.Get = function(q, s) {
+	s = (s) ? s : window.location.search;
+	var re = new RegExp('&amp;'+q+'=([^&amp;]*)','i');
+	return (s=s.replace(/^\?/,'&amp;').match(re)) ?s=s[1] :s='';
+}
+
 Helpers.RandomInt = function(min, max) {
 	return Math.floor(Math.random() * (max - min) + min);
 }

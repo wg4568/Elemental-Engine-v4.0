@@ -30,6 +30,8 @@
 		lineWidth: 0
 	});
 
+	var room = Helpers.Get("room");
+
 	var swarmers = [];
 
 	for (var i = 0; i < 100; i++) {
@@ -38,11 +40,6 @@
 		swarmer.friction = 0.97;
 		swarmers.push(swarmer);
 	}
-
-// 	sprite = new Sprite.Ellipse(5, {
-// 		lineWidth: 0,
-// 		fillColor: "red"
-// 	});
 	
 	background.redraw(function() {
 		background.fill(bg);
@@ -88,6 +85,5 @@
 			
 		});
 	});
-
 
 </script>
