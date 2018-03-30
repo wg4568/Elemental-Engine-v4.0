@@ -14,7 +14,7 @@
 	var canvas = new Canvas("canvas", fullscreen=true);
 	var controls = new Controls(canvas.div);
 	var layer = new Layer();
-	var socket = new WebSocket('ws://localhost:5500/');
+	var socket = new WebSocket(Helpers.Get("server"));
 	var id = "";
 
 	canvas.addLayer(layer);
