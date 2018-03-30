@@ -13,77 +13,146 @@
 
 	var canvas = new Canvas("canvas", fullscreen=true);
 	var controls = new Controls(canvas.div);
-	var background = new Layer();
 	var layer = new Layer();
+	var socket = new WebSocket('ws://localhost:8080/');
+	var id = "";
 
-	canvas.addLayer(background);
 	canvas.addLayer(layer);
 
-	var bg = "black";
-
-	var sprite = new Sprite.Points([
-		new Vector(-5, 0),
-		new Vector(5, 0),
-		new Vector(0, 15)
-	], {
-		fillColor: "red",
-		lineWidth: 0
-	});
+	var color = Color.RandomNeon;
 
 	var room = Helpers.Get("room");
 
-	var swarmers = [];
+	class Swarm {
+		constructor(size) {
+			this.size = size;
+			this.clock = 0;
+			this.posn = Vector.Empty;
+			this._color = Color.RandomNeon.formatHEX();
+			this.sprite = new Sprite.Points([
+				new Vector(-5, 0),
+				new Vector(5, 0),
+				new Vector(0, 15)
+			], {
+				fillColor: this._color,
+				lineWidth: 0
+			});
 
-	for (var i = 0; i < 100; i++) {
-		var swarmer = new Rigidbody(Vector.Random(0, 2400, 0, 1000))
-		// swarmer.maxSpeed = 50;
-		swarmer.friction = 0.97;
-		swarmers.push(swarmer);
+			this.swarmers = [];
+
+			for (var i = 0; i < this.size; i++) {
+				var swarmer = new Rigidbody(Vector.Random(0, 2400, 0, 1000))
+				swarmer.friction = 0.95;
+				this.swarmers.push(swarmer);
+			}
+		}
+
+		set color(val) {
+			this._color = val;
+			this.sprite.fillColor = this._color;
+			this.sprite.render();
+		}
+
+		frame() {
+			var parent = this;
+			this.swarmers.forEach(function(swarmer) {
+				if (isNaN(swarmer.velocity.x)) {
+					swarmer.velocity = Vector.Empty;
+				}
+
+				var angle = Helpers.AngleBetween(swarmer.posn, parent.posn);
+				var step = Helpers.StepBetween(swarmer.posn, parent.posn);
+
+				swarmer.angle = angle;
+
+				swarmer.addForce(Vector.Multiply(step, -3));
+				swarmer.logic();
+
+				var repulses = [];
+				parent.swarmers.forEach(function(compare) {
+
+					var dist = Helpers.DistanceBetween(swarmer.posn, compare.posn);
+
+					if (dist < 2 && compare != swarmer) {
+						var repulse = Helpers.StepBetween(swarmer.posn, compare.posn);
+						repulse = Vector.Multiply(repulse, -5);
+						repulses.push(repulse);
+					}
+				});
+
+				repulses.forEach(function(repulse) {
+					swarmer.addForce(repulse);
+				});
+			});
+		}
+
+		draw(layer) {
+			var parent = this;
+			this.swarmers.forEach(function(swarmer) {
+				parent.sprite.rotation = swarmer.angle;
+				layer.sprite(swarmer.posn, parent.sprite);
+			})
+		}
 	}
-	
-	background.redraw(function() {
-		background.fill(bg);
-	});
 
-	Timer.Start(function() {
+	var mySwarm = new Swarm(100);
+	var swarms = {};
+	var ids = [];
 
+	// networking
+	socket.onopen = function(event) {
+		socket.send(`CONFIG ${room} ${color.formatHEX()}`);
+	};
 
-		layer.context.globalCompositeOperation = 'xor';
-		layer.fill("rgba(0, 0, 0, 0.05)");
-		layer.context.globalCompositeOperation = 'source-over';
+	socket.onmessage = function(event) {
+		var data = event.data.split(" ");
 
-		swarmers.forEach(function(swarmer) {
-			if (isNaN(swarmer.velocity.x)) {
-				swarmer.velocity = Vector.Empty;
+		if (data[0] == "CONFIG") {
+			id = data[1];
+			swarms[id] = mySwarm;
+			ids.push(id);
+		}
+
+		if (data[0] == "UPDATE") {
+			var members = data[1].split("|");
+			members.forEach(function(member) {
+				var memberData = member.split(",");
+				var swarm = swarms[memberData[0]];
+
+				if (swarm == null) {
+					ids.push(memberData[0]);
+					swarm = new Swarm(100)
+					swarms[memberData[0]] = swarm;
+				}
+
+				swarm.posn.x = parseInt(memberData[1]);
+				swarm.posn.y = parseInt(memberData[2]);
+				swarm.color = memberData[3];
+
+				swarm.clock = 0;
+			});
+		}
+	};
+
+	setInterval(function() {
+
+		layer.fill("rgba(255, 255, 255, 0.2)");
+
+		socket.send(`UPDATE ${controls.mousePos.x} ${controls.mousePos.y}`);
+
+		ids.forEach(function(key) {
+			swarms[key].clock ++;
+
+			if (swarms[key].clock > 10) {
+				delete swarms[key];
+				var idx = ids.indexOf(key);
+				if (idx != -1) ids.splice(idx, 0);
 			}
 
-			var angle = Helpers.AngleBetween(swarmer.posn, controls.mousePos);
-			var step = Helpers.StepBetween(swarmer.posn, controls.mousePos);
-
-			swarmer.addForce(Vector.Multiply(step, -3));
-			swarmer.logic();
-
-			var repulses = [];
-			swarmers.forEach(function(compare) {
-
-				var dist = Helpers.DistanceBetween(swarmer.posn, compare.posn);
-
-				if (dist < 2 && compare != swarmer) {
-					var repulse = Helpers.StepBetween(swarmer.posn, compare.posn);
-					repulse = Vector.Multiply(repulse, -5);
-					repulses.push(repulse);
-				}
-			});
-
-			repulses.forEach(function(repulse) {
-				swarmer.addForce(repulse);
-			});
-
-			sprite.rotation = angle;
-
-			layer.sprite(swarmer.posn, sprite);
-			
+			swarms[key].frame();
+			swarms[key].draw(layer);
 		});
-	});
+
+	}, 1000/60);
 
 </script>
