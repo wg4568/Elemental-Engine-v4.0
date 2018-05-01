@@ -162,7 +162,7 @@ Layer.UI.Element = class {
 	}
 }
 
-Layer.UI.Element.HealthBar = class  {
+Layer.UI.Element.HealthBar = class extends Layer.UI.Element {
 	constructor(pin, offset, width, height, max, bgc="#000000", fgc="#ff0000", value=50, edge=5) {
 		super(pin, offset, width, height);
 		this.maxValue = max;
