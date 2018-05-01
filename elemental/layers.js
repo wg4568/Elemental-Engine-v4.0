@@ -162,6 +162,25 @@ Layer.UI.Element = class {
 	}
 }
 
+Layer.UI.Element.HealthBar = class  {
+	constructor(pin, offset, width, height, max, bgc="#000000", fgc="#ff0000", value=50, edge=5) {
+		super(pin, offset, width, height);
+		this.maxValue = max;
+		this.value = value;
+		this.edge = edge;
+		this.bgc = bgc;
+		this.fgc = fgc;
+	}
+
+	drawFunc(posn) {
+		var scaleFactor = this.value / this.maxValue;
+
+		this.layer.context.fillStyle = this.bgc;
+		this.layer.rect(posn, this.width, this.height, this.bgc)
+		this.layer.rect(Vector.Add(posn, this.edge), (this.width - (this.edge * 2)) * scaleFactor, this.height - (this.edge * 2), this.fgc);
+	}
+}
+
 Layer.UI.Pins = {
 	Center: 0,
 	BottomLeft: 1,
