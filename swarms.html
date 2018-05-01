@@ -41,7 +41,7 @@
 			this.swarmers = [];
 
 			for (var i = 0; i < this.size; i++) {
-				var swarmer = new Rigidbody(Vector.Random(0, 2400, 0, 1000))
+				var swarmer = new Physics.Body(Vector.Random(0, 2400, 0, 1000))
 				swarmer.friction = 0.95;
 				this.swarmers.push(swarmer);
 			}

@@ -1,4 +1,3 @@
-
 class Layer {
 	
 	constructor() {
@@ -62,10 +61,10 @@ class Layer {
 	clear() {
 		this.context.clearRect(0, 0, this.width, this.height);		
 	}
-	
-	square(posn, size, color) {
+
+	rect(posn, width, height, color) {
 		this.context.fillStyle = color;
-		this.context.fillRect(posn.x, posn.y, size, size);
+		this.context.fillRect(posn.x, posn.y, width, height);
 	}
 	
 	sprite(posn, sprite, rotation=0, scale=0) {
@@ -74,13 +73,99 @@ class Layer {
 }
 
 Layer.World = class extends Layer {
-	constructor() {
-		this.super();
+	constructor(posn=Vector.Empty) {
+		super();
+
+		this.posn = posn;
+	}
+
+	worldToCanvas(posn) {
+		return Vector.Subtract(posn, this.posn, new Vector(-this.width / 2, -this.height / 2));
+	}
+
+	canvasToWorld(posn) {
+		return Vector.Add(this.posn, posn, new Vector(-this.width / 2, -this.height / 2));
+	}
+
+	rect(posn, width, height, color) {
+		var cposn = this.worldToCanvas(posn)
+
+		this.context.fillStyle = color;
+		this.context.fillRect(cposn.x, cposn.y, width, height);
+	}
+
+	sprite(posn, sprite, rotation=0, scale=0) {
+		var cposn = this.worldToCanvas(posn)
+		sprite.drawOnLayer(this, cposn);
 	}
 }
 
 Layer.UI = class extends Layer {
 	constructor() {
-		this.super();
+		super();
+
+		this.elements = [];
 	}
+
+	addElement(el) {
+		el.layer = this;
+		this.elements.push(el);
+	}
+
+	draw() {
+		this.elements.forEach(function(e) {
+			e.draw();
+		});
+	}
+}
+
+Layer.UI.Element = class {
+	constructor(pin, offset, width, height) {
+		this.pin = pin;
+		this.offset = offset;
+
+		this.width = width;
+		this.height = height;
+
+		this.layer = null;
+	}
+
+	drawFunc(posn) {
+		// user defined
+	}
+
+	draw() {
+		var posn = Vector.Empty;
+
+		if (this.pin == Layer.UI.Pins.Center) {
+			posn = new Vector((this.layer.width - this.width) / 2, (this.layer.height - this.height) / 2);
+			posn = Vector.Add(posn, this.offset);
+		}
+
+		if (this.pin == Layer.UI.Pins.BottomLeft) {
+			posn = new Vector(this.offset.x, this.layer.height - this.offset.y - this.height);
+		}
+
+		if (this.pin == Layer.UI.Pins.BottomRight) {
+			posn = new Vector(this.layer.width - this.offset.x - this.width, this.layer.height - this.offset.y - this.height);
+		}
+
+		if (this.pin == Layer.UI.Pins.TopLeft) {
+			posn = this.offset;
+		}
+
+		if (this.pin == Layer.UI.Pins.TopRight) {
+			posn = new Vector(this.layer.width - this.offset.x - this.width, this.offset.y);
+		}
+
+		this.drawFunc(posn);
+	}
+}
+
+Layer.UI.Pins = {
+	Center: 0,
+	BottomLeft: 1,
+	BottomRight: 2,
+	TopLeft: 3,
+	TopRight: 4
 }

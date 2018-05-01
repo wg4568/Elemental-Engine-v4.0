@@ -75,6 +75,55 @@ class Vector {
 	}
 }
 
+// from stackoverflow LOL (modified for ES6)
+class Timer {
+	constructor() {	
+		this.lastTime = 0;
+		this.gameTick = null;
+		this.prevElapsed = 0;
+		this.prevElapsed2 = 0;
+	}
+
+	Start(gameTick) {
+		var prevTick = this.gameTick;
+		this.gameTick = gameTick;
+		if (this.lastTime == 0) {
+			var bindThis = this;
+			requestAnimationFrame(function() { bindThis.tick(); } );
+			this.lastTime = 0;
+		}
+	}
+
+	Stop() {
+		this.Start(null);
+	}
+
+	tick() {
+		if (this.gameTick != null) {
+			var bindThis = this;
+			requestAnimationFrame(function() { bindThis.tick(); } );
+		}
+		else {
+			this.lastTime = 0;
+			return;
+		}
+		var timeNow = Date.now();
+		var elapsed = timeNow - this.lastTime;
+		if (elapsed > 0) {
+			if (this.lastTime != 0) {
+				if (elapsed > 1000) // Cap max elapsed time to 1 second to avoid death spiral
+				elapsed = 1000;
+				// Hackish fps smoothing
+				var smoothElapsed = (elapsed + this.prevElapsed + this.prevElapsed2)/3;
+				this.gameTick(0.001*smoothElapsed);
+				this.prevElapsed2 = this.prevElapsed;
+				this.prevElapsed = elapsed;
+			}
+			this.lastTime = timeNow;
+		}
+	}
+}
+
 // Color class to represent color
 Color = class {
 	constructor() {
