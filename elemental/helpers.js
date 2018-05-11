@@ -279,6 +279,21 @@ Color = class {
 	}
 }
 
+class Sound {
+	constructor(src) {
+		this.sound = document.createElement("audio");
+		this.sound.src = src;
+
+		this.sound.setAttribute("preload", "auto");
+		this.sound.setAttribute("controls", "none");
+		this.sound.style.display = "none";
+	}
+
+	play() {
+		this.sound.play();
+	}
+}
+
 // Helper object filled with helper functions and classes
 Helpers = {}
 
@@ -288,6 +303,13 @@ Helpers.ToRadians = function(degrees) {
 
 Helpers.ToDegrees = function(radians) {
 	return radians * 180 / Math.PI;
+}
+
+Helpers.UnitCircle = function(degrees, scale=1) {
+	return new Vector(
+		Math.cos(Helpers.ToRadians(degrees)) * scale,
+		Math.sin(Helpers.ToRadians(degrees)) * scale
+	);
 }
 
 Helpers.AngleBetween = function(point1, point2) {
