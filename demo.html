@@ -1,0 +1,70 @@
+<title>Elemental V4 Demo</title>
+
+<script src="elemental/helpers.js"></script>
+<script src="elemental/sprites.js"></script>
+<script src="elemental/canvas.js"></script>
+<script src="elemental/layers.js"></script>
+<script src="elemental/physics.js"></script>
+<script src="elemental/controls.js"></script>
+<script src="elemental/keys.js"></script>
+
+<div id="canvas"></div>
+
+<script>
+
+	var canvas = new Canvas("canvas", fullscreen=true);
+	var controls = new Controls(canvas.div);
+	var timer = new Timer();
+
+	var background = new Layer();
+	var environment = new Layer.World();
+	var interface = new Layer.UI();
+
+	canvas.addLayer(background);
+	canvas.addLayer(environment);
+	canvas.addLayer(interface);
+
+	var background_color = Color.RandomPastel;
+	var shape_color = Color.RandomNeon;
+
+	var shape_posn = Vector.Empty;
+
+	var shape_sprite = new Sprite.Polygon(5, 150, {
+		lineWidth: 10,
+		fillColor: shape_color.formatHEX()
+	});
+
+	var img_sprite = new Sprite.Image("https://opengameart.org/sites/default/files/styles/medium/public/spr_car4_0.png");
+
+	var text_sprite = new Sprite.Text("Hello, world!", "Arial", 30);
+
+	canvas.onResize = function() {
+		background.fill(background_color.formatHEX());
+	}
+
+	hue_anim = new Timer.Animation(function(frame) {
+		shape_color.hue += 2;
+		shape_sprite.fillColor = shape_color.formatHEX();
+		shape_sprite.render();
+	}, 255);
+
+	spin_anim = new Timer.Animation(function(frame) {
+		shape_sprite.rotation += 2;
+	}, 180, can_double=true)
+
+	timer.Start(function(frame) {
+
+		environment.clear();
+		environment.sprite(new Vector(-250, -250), img_sprite);
+		environment.sprite(new Vector(250, 250), text_sprite);
+		environment.sprite(shape_posn, shape_sprite);
+
+		if (controls.keyPressed(Keycodes.SPACE)) timer.launchAnimation(hue_anim);
+		if (controls.keyPressed(Keycodes.ENTER)) timer.launchAnimation(spin_anim);
+		if (controls.mouseHeld(Mousecodes.LEFT)) shape_posn = environment.canvasToWorld(controls.mousePos); 
+
+		controls.frame();
+
+	});
+
+</script>
