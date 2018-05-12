@@ -211,6 +211,7 @@ Sprite.Text = class extends Sprite {
 
 		this.font = font;
 		this.fontSize = size;
+		this.fillColor = "black";
 
 		this.text = text;
 
@@ -232,13 +233,17 @@ Sprite.Text = class extends Sprite {
 	get fontSize() { return this._fontSize; }
 
 	render() {
+		this.context.fillStyle = this.fillStyle;
 		this.context.font = this.fontStr;
+
 		this.canvasDim(
 			this.context.measureText(this.text).width,
-			this.fontSize
+			this.fontSize + (this.fontSize * 0.5)
 		);
 
-		this.context.fillText(this.text, 0, 0);
+		this.context.fillStyle = this.fillStyle;
+		this.context.font = this.fontStr;
+		this.context.fillText(this.text, 0, this.fontSize);
 	}
 }
 

@@ -181,6 +181,17 @@ Layer.UI.Element.HealthBar = class extends Layer.UI.Element {
 	}
 }
 
+Layer.UI.Element.Sprite = class extends Layer.UI.Element {
+	constructor(pin, offset, sprite) {
+		super(pin, offset, sprite.width, sprite.height);
+		this.sprite = sprite;
+	}
+
+	drawFunc(posn) {
+		this.layer.sprite(posn, this.sprite);
+	}
+}
+
 Layer.UI.Pins = {
 	Center: 0,
 	BottomLeft: 1,

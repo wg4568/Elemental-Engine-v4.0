@@ -12,36 +12,67 @@
 
 <script>
 
+	// canvas holds a series of layers, selected DIV element
 	var canvas = new Canvas("canvas", fullscreen=true);
+
+	// controls class manages key and mouse inputs
 	var controls = new Controls(canvas.div);
+
+	// timer handles game loop and animations
 	var timer = new Timer();
 
+	// standard layer for background color
 	var background = new Layer();
+
+	// 'world' layer for environment sprites
 	var environment = new Layer.World();
+
+	// 'UI' layer for user interface elements
 	var interface = new Layer.UI();
 
+	// add layers to the canvas
 	canvas.addLayer(background);
 	canvas.addLayer(environment);
 	canvas.addLayer(interface);
 
+	// two colors, one for background and one for the shape
 	var background_color = Color.RandomPastel;
 	var shape_color = Color.RandomNeon;
 
+	// 'Empty' vector (0, 0) for shape posn
 	var shape_posn = Vector.Empty;
 
+	// series of sprites for various demo elements
+	var img_sprite = new Sprite.Image("https://opengameart.org/sites/default/files/styles/medium/public/spr_car4_0.png");
+	var text_sprite = new Sprite.Text("This is a UI element, pinned to the top right", "Georgia", 40);
+	var help_sprite = new Sprite.Text("TRY: left/right click, space, enter + arrow keys", "Arial", 20);
 	var shape_sprite = new Sprite.Polygon(5, 150, {
 		lineWidth: 10,
 		fillColor: shape_color.formatHEX()
 	});
 
-	var img_sprite = new Sprite.Image("https://opengameart.org/sites/default/files/styles/medium/public/spr_car4_0.png");
+	// 'health bar' UI element, pinned to bottom left
+	var health_bar = new Layer.UI.Element.HealthBar(
+		Layer.UI.Pins.BottomLeft, new Vector(20, 20),
+		300, 40, 100, bgc="#000000", fgc="#ff0000", value=100, edge=5
+	);
 
-	var text_sprite = new Sprite.Text("Hello, world!", "Arial", 30);
+	// 'sprite' UI element, pinned to top right
+	var text_message = new Layer.UI.Element.Sprite(
+		Layer.UI.Pins.TopRight, new Vector(20, 20),
+		text_sprite
+	);
 
+	// add two UI elements to the interface layer
+	interface.addElement(health_bar);
+	interface.addElement(text_message);
+
+	// re-fill background layer ONLY when it is resized (canvases are cleared on resize)
 	canvas.onResize = function() {
 		background.fill(background_color.formatHEX());
 	}
 
+	// various animations for the demo
 	hue_anim = new Timer.Animation(function(frame) {
 		shape_color.hue += 2;
 		shape_sprite.fillColor = shape_color.formatHEX();
@@ -52,19 +83,43 @@
 		shape_sprite.rotation += 2;
 	}, 180, can_double=true)
 
+	health_anim = new Timer.Animation(function(frame) {
+		var v = 100 - frame;
+		if (v < 0) v *= -1;
+		health_bar.value = v;
+	}, 200);
+
+	// start the main loop
 	timer.Start(function(frame) {
 
+		// clear environment and interface layers
 		environment.clear();
+		interface.clear();
+
+		// draw sprites
 		environment.sprite(new Vector(-250, -250), img_sprite);
-		environment.sprite(new Vector(250, 250), text_sprite);
+		environment.sprite(new Vector(250, 250), help_sprite);
 		environment.sprite(shape_posn, shape_sprite);
 
+		// draw interface
+		interface.draw();
+
+		// animation initiation controls
 		if (controls.keyPressed(Keycodes.SPACE)) timer.launchAnimation(hue_anim);
 		if (controls.keyPressed(Keycodes.ENTER)) timer.launchAnimation(spin_anim);
+		if (controls.mousePressed(Mousecodes.RIGHT)) timer.launchAnimation(health_anim);
+
+		// mouse movement controls
 		if (controls.mouseHeld(Mousecodes.LEFT)) shape_posn = environment.canvasToWorld(controls.mousePos); 
 
-		controls.frame();
+		// control position of the camera on the 'environment' layer
+		if (controls.keyHeld(Keycodes.LEFT))  environment.posn.x -= 2;
+		if (controls.keyHeld(Keycodes.RIGHT)) environment.posn.x += 2;
+		if (controls.keyHeld(Keycodes.UP))    environment.posn.y -= 2;
+		if (controls.keyHeld(Keycodes.DOWN))  environment.posn.y += 2;
 
+		// tick the controls class, required for various reasons
+		controls.frame();
 	});
 
 </script>
