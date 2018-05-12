@@ -205,6 +205,43 @@ Sprite.Polygon = class extends Sprite {
 	}
 }
 
+Sprite.Text = class extends Sprite {
+	constructor(text, font, size, config={}) {
+		super();
+
+		this.font = font;
+		this.fontSize = size;
+
+		this.text = text;
+
+		this.inherit(config);
+		this.render();
+	}
+
+	set font(val) {
+		this._font = val;
+		this.fontStr = `${this.fontSize}px ${val}`;
+	}
+
+	set fontSize(val) {
+		this._fontSize = val;
+		this.fontStr = `${val}px ${this.font}`;
+	}
+
+	get font() { return this._font; }
+	get fontSize() { return this._fontSize; }
+
+	render() {
+		this.context.font = this.fontStr;
+		this.canvasDim(
+			this.context.measureText(this.text).width,
+			this.fontSize
+		);
+
+		this.context.fillText(this.text, 0, 0);
+	}
+}
+
 Sprite.Points = class extends Sprite {
 	constructor(points, config={}) {
 		super();

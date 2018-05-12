@@ -1,4 +1,3 @@
-
 class Canvas {
 	constructor(id, fullscreen=false) {
 		this.id = id;
@@ -9,10 +8,15 @@ class Canvas {
 		this.fullscreen = fullscreen;
 		
 		this.layers = [];
-		
+
+		this.onLoad = function(c) {};
+		this.onResize = function(c) {};
+
 		var parent = this;
 		window.addEventListener("load", function() {
 			if (parent.fullscreen) parent.fullscreenLayers();
+			parent.onLoad(parent);
+			parent.onResize(parent);
 		});
 
 		if (this.fullscreen) {
@@ -20,6 +24,7 @@ class Canvas {
 
 			window.addEventListener("resize", function(event) {
 				parent.fullscreenLayers();
+				parent.onResize(parent);
 			});
 		}
 	}
