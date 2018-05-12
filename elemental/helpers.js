@@ -82,6 +82,25 @@ class Timer {
 		this.gameTick = null;
 		this.prevElapsed = 0;
 		this.prevElapsed2 = 0;
+		this.frame = 0;
+		this.animations = [];
+	}
+
+	launchAnimation(so) {
+		if (so.can_double) {
+			so.parent = this;
+			so.onStart(so);
+			this.animations.push(so);
+		} else if (this.animations.indexOf(so) == -1) {
+			so.parent = this;
+			so.onStart(so);
+			this.animations.push(so);
+		}
+	}
+
+	endAnimation(so) {
+		var idx = this.animations.indexOf(so);
+		if (idx != -1) this.animations.splice(idx, 1);
 	}
 
 	Start(gameTick) {
@@ -89,7 +108,9 @@ class Timer {
 		this.gameTick = gameTick;
 		if (this.lastTime == 0) {
 			var bindThis = this;
-			requestAnimationFrame(function() { bindThis.tick(); } );
+			requestAnimationFrame(function() {
+				bindThis.tick();
+			});
 			this.lastTime = 0;
 		}
 	}
@@ -99,6 +120,11 @@ class Timer {
 	}
 
 	tick() {
+		this.frame++;
+		this.animations.forEach(function(so) {
+			so.doFrame();
+		});
+
 		if (this.gameTick != null) {
 			var bindThis = this;
 			requestAnimationFrame(function() { bindThis.tick(); } );
@@ -115,12 +141,35 @@ class Timer {
 				elapsed = 1000;
 				// Hackish fps smoothing
 				var smoothElapsed = (elapsed + this.prevElapsed + this.prevElapsed2)/3;
-				this.gameTick(0.001*smoothElapsed);
+				this.gameTick(this.frame, 0.001*smoothElapsed);
 				this.prevElapsed2 = this.prevElapsed;
 				this.prevElapsed = elapsed;
 			}
 			this.lastTime = timeNow;
 		}
+	}
+}
+
+Timer.Animation = class {
+	constructor(func, length, can_double=false) {
+		this.func = func;
+		this.can_double = can_double;
+		this.length = length;
+		this.frame = 0;
+		this.parent = null;
+
+		this.onStart = function() {};
+		this.onEnd = function() {};
+	}
+
+	doFrame() {
+		if (this.frame >= this.length - 1) {
+			this.parent.endAnimation(this);
+			this.frame = 0;
+			this.onEnd(this);
+		}
+		this.func(this.frame, this);
+		this.frame++;
 	}
 }
 
